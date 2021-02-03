@@ -1,4 +1,5 @@
 import {
+  ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -6,14 +7,27 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { Socket } from 'socket.io';
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server;
+  userMap: Map<string, string> = new Map<string, string>();
   @SubscribeMessage('message')
-  handleEvent(@MessageBody() data: string): string {
+  handleChatEvent(@MessageBody() data: string): string {
     console.log(data);
     this.server.emit('messages', data);
     return data + 'Hello';
+  }
+
+  @SubscribeMessage('name')
+  handleNameEvent(
+    @MessageBody() name: string,
+    @ConnectedSocket() client: Socket,
+  ): string {
+    this.userMap.set(client.id, name);
+    this.server.emit('clients', Array.from(this.userMap.values()));
+    console.log('map', this.userMap);
+    return name + 'Hello';
   }
 
   handleConnection(client: any, ...args: any[]): any {
@@ -21,6 +35,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: any): any {
+    this.userMap.delete(client.id);
+    this.server.emit('clients', Array.from(this.userMap.values()));
     console.log('Client disconnect', client.id);
+    console.log('map', this.userMap);
   }
 }

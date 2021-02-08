@@ -9,12 +9,16 @@ import {
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { ChatService } from './shared/chat.service';
+import { ChatMessage } from './shared/chat-message.model';
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private chatService: ChatService) {}
   @WebSocketServer() server;
   @SubscribeMessage('message')
-  handleChatEvent(@MessageBody() message: string, @ConnectedSocket() client: Socket ): void {
+  handleChatEvent(
+    @MessageBody() message: string,
+    @ConnectedSocket() client: Socket,
+  ): void {
     const chatMessage = this.chatService.newMessage(message, client.id);
     this.server.emit('newMessage', chatMessage);
   }

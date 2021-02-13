@@ -8,12 +8,19 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
-import { ChatService } from './shared/chat.service';
-import { ChatMessage } from './shared/chat-message.model';
-import { WelcomeDto } from './shared/welcome.dto';
+import { ChatService } from '../../core/services/chat.service';
+import { ChatMessage } from '../../core/models/chat-message.model';
+import { WelcomeDto } from '../dtos/welcome.dto';
+import { Inject } from '@nestjs/common';
+import {
+  IChatService,
+  IChatServiceProvider,
+} from '../../core/primary-ports/chat.service.interface';
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private chatService: ChatService) {}
+  constructor(
+    @Inject(IChatServiceProvider) private chatService: IChatService,
+  ) {}
   @WebSocketServer() server;
   @SubscribeMessage('message')
   handleChatEvent(
@@ -22,6 +29,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): void {
     const chatMessage = this.chatService.newMessage(message, client.id);
     this.server.emit('newMessage', chatMessage);
+  }
+
+  @SubscribeMessage('typing')
+  handleTypingEvent(
+    @MessageBody() typing: boolean,
+    @ConnectedSocket() client: Socket,
+  ): void {
+    console.log('typing', typing);
+    const chatClient = this.chatService.updateTyping(typing, client.id);
+    if (chatClient) {
+      this.server.emit('clientTyping', chatClient);
+    }
   }
 
   @SubscribeMessage('nickname')

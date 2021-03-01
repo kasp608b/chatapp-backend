@@ -2,11 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { ChatClient } from '../models/chat-client.model';
 import { ChatMessage } from '../models/chat-message.model';
 import { IChatService } from '../primary-ports/chat.service.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import client from '../../infrastructure/data-source/client.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ChatService implements IChatService {
   allMessages: ChatMessage[] = [];
   clients: ChatClient[] = [];
+  constructor(
+    @InjectRepository(client)
+    private postsRepository: Repository<client>,
+  ) {}
   newMessage(message: string, senderId: string): ChatMessage {
     const chatMessage: ChatMessage = {
       message,

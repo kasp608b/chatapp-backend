@@ -1,15 +1,10 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-class Post {
+export default class ChatClientEntity {
   @PrimaryGeneratedColumn()
   public id: number;
 
   @Column()
-  public title: string;
-
-  @Column()
-  public content: string;
+  public nickName: string;
 }
-
-export default Post;

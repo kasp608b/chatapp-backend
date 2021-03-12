@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import ChatClientEntity from '../entities/ChatClientEntity';
 
 @Module({
   imports: [
@@ -15,7 +14,7 @@ import ChatClientEntity from '../entities/ChatClientEntity';
         username: configService.get('POSTGRES_USER'),
         password: configService.get('POSTGRES_PASSWORD'),
         database: configService.get('POSTGRES_DB'),
-        entities: [ChatClientEntity],
+        entities: [__dirname + '/../**/*.entity.ts'],
         synchronize: true,
       }),
     }),

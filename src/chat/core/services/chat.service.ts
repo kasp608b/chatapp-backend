@@ -3,19 +3,16 @@ import { ChatClient } from '../models/chat-client.model';
 import { ChatMessage } from '../models/chat-message.model';
 import { IChatService } from '../primary-ports/chat.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
+import client from '../../infrastructure/data-source/client.entity';
 import { Repository } from 'typeorm';
-import ChatClientEntity from '../../infrastructure/data-source/entities/ChatClientEntity';
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { fromPromise } from 'rxjs/internal-compatibility';
 
 @Injectable()
 export class ChatService implements IChatService {
   allMessages: ChatMessage[] = [];
   clients: ChatClient[] = [];
   constructor(
-    @InjectRepository(ChatClientEntity)
-    private chatClientRepository: Repository<ChatClientEntity>,
+    @InjectRepository(client)
+    private postsRepository: Repository<client>,
   ) {}
   newMessage(message: string, senderId: string): ChatMessage {
     const chatMessage: ChatMessage = {
@@ -27,23 +24,19 @@ export class ChatService implements IChatService {
     return chatMessage;
   }
 
-  newClient(id: string, nickname: string): Observable<ChatClient> {
-    const chatClient = this.clients.find(
+  newClient(id: string, nickname: string): ChatClient {
+    let chatClient = this.clients.find(
       (c) => c.nickName === nickname && c.id === id,
     );
     if (chatClient) {
-      return of(chatClient);
+      return chatClient;
     }
     if (this.clients.find((c) => c.nickName === nickname)) {
       throw new Error('Nickname already used');
     }
-    const client = this.chatClientRepository.create();
-    client.nickName = nickname;
-    return fromPromise(this.chatClientRepository.save(client)).pipe(
-      map((dbClient) => {
-        return { id: '' + dbClient.id, nickName: nickname };
-      }),
-    );
+    chatClient = { id: id, nickName: nickname, typing: undefined };
+    this.clients.push(chatClient);
+    return chatClient;
   }
 
   getClients(): ChatClient[] {

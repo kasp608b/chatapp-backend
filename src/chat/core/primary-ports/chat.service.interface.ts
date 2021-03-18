@@ -4,15 +4,15 @@ import { Observable } from 'rxjs';
 
 export const IChatServiceProvider = 'IChatServiceProvider';
 export interface IChatService {
-  addMessage(message: string, senderId: string): ChatMessage;
+  addMessage(message: string, senderId: string): Promise<ChatMessage>;
 
   addClient(id: string, nickname: string): Promise<ChatClient>;
 
   getClients(): Promise<ChatClient[]>;
 
-  getMessages(): ChatMessage[];
+  getMessages(): Promise<ChatMessage[]>;
 
   delete(id: string): Promise<void>;
 
-  updateTyping(typing: boolean, id: string): ChatClient;
+  updateTyping(typing: boolean, id: string): Promise<ChatClient>;
 }

@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ChatMessageEntity } from './ChatMessageEntity';
 
 @Entity()
 export class ChatClientEntity {
@@ -7,4 +14,7 @@ export class ChatClientEntity {
 
   @Column({ unique: true })
   public nickName: string;
+
+  @Column({ type: 'boolean', nullable: true })
+  public typing?: boolean | undefined;
 }

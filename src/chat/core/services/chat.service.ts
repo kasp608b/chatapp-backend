@@ -8,29 +8,40 @@ import { ChatClientEntity } from '../../infrastructure/data-source/entities/Chat
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { fromPromise } from 'rxjs/internal-compatibility';
+import { ChatMessageEntity } from '../../infrastructure/data-source/entities/ChatMessageEntity';
+import { getRepository } from 'typeorm';
 
 @Injectable()
 export class ChatService implements IChatService {
-  allMessages: ChatMessage[] = [];
-  clients: ChatClient[] = [];
   constructor(
     @InjectRepository(ChatClientEntity)
     private chatClientRepository: Repository<ChatClientEntity>,
+    @InjectRepository(ChatMessageEntity)
+    private chatMessageRepository: Repository<ChatMessageEntity>,
   ) {}
-  addMessage(message: string, senderId: string): ChatMessage {
-    const chatMessage: ChatMessage = {
-      message,
-      sender: this.clients.find((c) => c.id === senderId),
-      timeStamp: new Date(Date.now()),
+  async addMessage(message: string, senderId: string): Promise<ChatMessage> {
+    let chatMessageEntity = this.chatMessageRepository.create();
+    chatMessageEntity.message = message;
+    chatMessageEntity.sender = await this.chatClientRepository.findOne({
+      id: senderId,
+    });
+    chatMessageEntity.timeStamp = new Date(Date.now());
+    chatMessageEntity = await this.chatMessageRepository.save(
+      chatMessageEntity,
+    );
+    return {
+      id: chatMessageEntity.id,
+      message: chatMessageEntity.message,
+      sender: chatMessageEntity.sender,
+      timeStamp: chatMessageEntity.timeStamp,
     };
-    this.allMessages.push(chatMessage);
-    return chatMessage;
   }
 
   async addClient(id: string, nickname: string): Promise<ChatClient> {
     const clientDb = await this.chatClientRepository.findOne({
       nickName: nickname,
     });
+
     if (!clientDb) {
       let client = this.chatClientRepository.create();
       client.id = id;
@@ -51,19 +62,34 @@ export class ChatService implements IChatService {
     return chatClients;
   }
 
-  getMessages(): ChatMessage[] {
-    return this.allMessages;
+  async getMessages(): Promise<ChatMessage[]> {
+    const messages = await this.chatMessageRepository.find({
+      relations: ['sender'],
+    });
+    const chatMessages: ChatMessage[] = JSON.parse(JSON.stringify(messages));
+    return chatMessages;
   }
 
   async delete(id: string): Promise<void> {
+    await this.chatMessageRepository.delete({ sender: { id: id } });
     await this.chatClientRepository.delete({ id: id });
   }
 
-  updateTyping(typing: boolean, id: string): ChatClient {
-    const chatClient = this.clients.find((c) => c.id == id);
-    if (chatClient && chatClient.typing !== typing) {
-      chatClient.typing = typing;
-      return chatClient;
+  async updateTyping(typing: boolean, id: string): Promise<ChatClient> {
+
+    const clientDb = await this.chatClientRepository.findOne({
+      id: id,
+    });
+
+    if (clientDb && clientDb.typing !== typing) {
+      clientDb.typing = typing;
+      return {
+        id: '' + clientDb.id,
+        nickName: clientDb.nickName,
+        typing: clientDb.typing,
+      };
+    } else {
+      return null;
     }
   }
 }

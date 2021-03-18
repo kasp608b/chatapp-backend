@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ChatClientEntity } from './ChatClientEntity';
 
 @Entity()
@@ -7,7 +7,7 @@ export class ChatMessageEntity {
   id: number;
   @Column()
   message: string;
-  @Column()
+  @ManyToOne(() => ChatClientEntity)
   sender: ChatClientEntity;
   @Column()
   timeStamp: Date;

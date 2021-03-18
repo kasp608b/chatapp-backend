@@ -23,21 +23,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
   @WebSocketServer() server;
   @SubscribeMessage('message')
-  handleChatEvent(
+  async handleChatEvent(
     @MessageBody() message: string,
     @ConnectedSocket() client: Socket,
-  ): void {
-    const chatMessage = this.chatService.addMessage(message, client.id);
-    this.server.emit('newMessage', chatMessage);
+  ): Promise<void> {
+    try {
+      const chatMessage = await this.chatService.addMessage(message, client.id);
+      this.server.emit('newMessage', chatMessage);
+    } catch (e) {
+      client.error(e.message);
+    }
   }
 
   @SubscribeMessage('typing')
-  handleTypingEvent(
+  async handleTypingEvent(
     @MessageBody() typing: boolean,
     @ConnectedSocket() client: Socket,
-  ): void {
+  ): Promise<void> {
     console.log('typing', typing);
-    const chatClient = this.chatService.updateTyping(typing, client.id);
+    const chatClient = await this.chatService.updateTyping(typing, client.id);
     if (chatClient) {
       this.server.emit('clientTyping', chatClient);
     }
@@ -51,10 +55,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const chatClient = await this.chatService.addClient(client.id, nickname);
       const chatClients = await this.chatService.getClients();
+      const chatMessages = await this.chatService.getMessages();
       console.log('chatClient', chatClient);
       const welcome: WelcomeDto = {
         clients: chatClients,
-        messages: this.chatService.getMessages(),
+        messages: chatMessages,
         client: chatClient,
       };
       client.emit('welcome', welcome);
@@ -66,7 +71,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket, ...args: any[]): Promise<any> {
     console.log('Client Connect', client.id);
-    client.emit('allMessages', this.chatService.getMessages());
+    client.emit('allMessages', await this.chatService.getMessages());
     this.server.emit('clients', await this.chatService.getClients());
   }
 

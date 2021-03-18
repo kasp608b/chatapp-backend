@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import ChatClientEntity from '../entities/ChatClientEntity';
+import { ChatClientEntity } from '../entities/ChatClientEntity';
 
 @Module({
   imports: [

@@ -1,8 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import ChatClientEntity from './ChatClientEntity';
+import { ChatClientEntity } from './ChatClientEntity';
 
 @Entity()
-export default class ChatMessageEntity {
+export class ChatMessageEntity {
   @PrimaryGeneratedColumn()
   id: number;
   @Column()

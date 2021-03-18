@@ -1,10 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export default class ChatClientEntity {
-  @PrimaryGeneratedColumn()
-  public id: number;
+export class ChatClientEntity {
+  @PrimaryColumn({ unique: true })
+  public id: string;
 
-  @Column()
+  @Column({ unique: true })
   public nickName: string;
 }

@@ -76,7 +76,6 @@ export class ChatService implements IChatService {
   }
 
   async updateTyping(typing: boolean, id: string): Promise<ChatClient> {
-
     const clientDb = await this.chatClientRepository.findOne({
       id: id,
     });

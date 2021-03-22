@@ -16,6 +16,7 @@ import {
   IChatService,
   IChatServiceProvider,
 } from '../../core/primary-ports/chat.service.interface';
+import { v4 as uuidv4 } from 'uuid';
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
